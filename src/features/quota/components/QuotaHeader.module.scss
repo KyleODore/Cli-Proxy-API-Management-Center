@@ -13,8 +13,10 @@
 
 .copy {
   display: flex;
-  flex-direction: column;
-  gap: 7px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
   min-width: 0;
 }
 
@@ -155,5 +157,19 @@
 
   .spinning {
     animation: none;
+  }
+}
+
+.secondaryAction {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
   }
 }

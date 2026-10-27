@@ -199,3 +199,27 @@
     transform: none;
   }
 }
+
+// The source editor shares the management surface palette, including gutters.
+.editorWrapper :global {
+  .cm-gutters {
+    background: var(--bg-primary);
+    color: var(--text-tertiary);
+    border-right-color: var(--border-color);
+  }
+  .cm-activeLine,
+  .cm-activeLineGutter {
+    background: var(--bg-tertiary);
+  }
+  .cm-panels {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+  }
+  .cm-cursor {
+    border-left-color: var(--text-primary);
+  }
+  .cm-content {
+    caret-color: var(--text-primary);
+  }
+}

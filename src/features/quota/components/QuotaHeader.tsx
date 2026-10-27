@@ -5,6 +5,8 @@ import styles from './QuotaHeader.module.scss';
 
 export type QuotaHeaderProps = {
   totalCount: number;
+  showEmails?: boolean;
+  onToggleEmails?: () => void;
   loadedCount: number;
   attentionCount: number;
   refreshing: boolean;
@@ -55,6 +57,14 @@ export function QuotaHeader(props: QuotaHeaderProps) {
         </p>
       </div>
       <div className={styles.actions} data-reveal>
+        <button
+          type="button"
+          className={styles.secondaryAction}
+          aria-pressed={props.showEmails}
+          onClick={props.onToggleEmails}
+        >
+          {t(props.showEmails ? 'prox.hide_emails' : 'prox.show_emails')}
+        </button>
         <button
           type="button"
           className={styles.primaryAction}

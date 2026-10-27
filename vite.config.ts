@@ -14,7 +14,10 @@ function getVersion(): string {
 
   // 2. Try git tag
   try {
-    const gitTag = execSync('git describe --tags --exact-match 2>/dev/null || git describe --tags 2>/dev/null || echo ""', { encoding: 'utf8' }).trim();
+    const gitTag = execSync(
+      'git describe --tags --exact-match 2>/dev/null || git describe --tags 2>/dev/null || echo ""',
+      { encoding: 'utf8' }
+    ).trim();
     if (gitTag) {
       return gitTag;
     }
@@ -24,7 +27,9 @@ function getVersion(): string {
 
   // 3. Fall back to package.json version
   try {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+    const pkg = JSON.parse(
+      fs.readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf8')
+    );
     if (pkg.version && pkg.version !== '0.0.0') {
       return pkg.version;
     }
@@ -35,32 +40,34 @@ function getVersion(): string {
   return 'dev';
 }
 
-// https://vitejs.dev/config/
+// Keep JS, CSS and provider icons inline. scripts/package.mjs copies the generated
+// index.html to management.html and prepares the release installer/checksum.
+// Hash routing is retained by src/App.tsx for CLIProxyAPI hosting.
 export default defineConfig({
   plugins: [
     react(),
     viteSingleFile({
-      removeViteModuleLoader: true
-    })
+      removeViteModuleLoader: true,
+    }),
   ],
   define: {
-    __APP_VERSION__: JSON.stringify(getVersion())
+    __APP_VERSION__: JSON.stringify(getVersion()),
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      '@': path.resolve(import.meta.dirname, './src'),
+    },
   },
   css: {
     modules: {
       localsConvention: 'camelCase',
-      generateScopedName: '[name]__[local]___[hash:base64:5]'
+      generateScopedName: '[name]__[local]___[hash:base64:5]',
     },
     preprocessorOptions: {
       scss: {
-        additionalData: `@use "@/styles/variables.scss" as *;`
-      }
-    }
+        additionalData: `@use "@/styles/variables.scss" as *;`,
+      },
+    },
   },
   build: {
     target: 'es2020',
@@ -70,8 +77,8 @@ export default defineConfig({
     cssCodeSplit: false,
     rolldownOptions: {
       output: {
-        codeSplitting: false
-      }
-    }
-  }
+        codeSplitting: false,
+      },
+    },
+  },
 });

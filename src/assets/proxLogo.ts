@@ -1,0 +1,2 @@
+/** Bundled vector mark; keeps the production panel independent of remote assets. */
+export const PROX_LOGO = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#171d26"/><path d="M10 10l12 10-12 10" stroke="#e27d60" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M12 20h18" stroke="#78aafa" stroke-width="4" stroke-linecap="round"/></svg>')}`;

@@ -164,30 +164,31 @@
 
 // 深色主题（#191919）
 [data-theme='dark'] {
-  // 极简暖灰：深色模式（提升对比度与层级）
-  --bg-secondary: #151412; // 页面背景
-  --bg-primary: #1d1b18; // 容器/卡片背景
-  --bg-tertiary: #262320; // hover/次级背景
-  --bg-hover: #2e2a26;
-  --bg-quinary: #191714;
+  // prox obsidian theme, shared by every management page.
+  color-scheme: dark;
+  --bg-secondary: #090a0f; // 页面背景
+  --bg-primary: #0d1117; // 容器/卡片背景
+  --bg-tertiary: #171d26; // hover/次级背景
+  --bg-hover: #202833;
+  --bg-quinary: #0b0e14;
   --bg-error-light: rgba(198, 87, 70, 0.18);
-  --floating-surface: #2a2723;
+  --floating-surface: #151b24;
   --floating-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
 
-  --text-primary: #f6f4f1;
-  --text-secondary: #c9c3bb;
-  --text-tertiary: #9c958d;
-  --text-quaternary: #6f6962;
+  --text-primary: #edf0f5;
+  --text-secondary: #b5bfcc;
+  --text-tertiary: #8793a4;
+  --text-quaternary: #5d6a7c;
   --text-muted: var(--text-tertiary);
 
-  --border-color: #3a3530;
+  --border-color: #1b2028;
   --border-secondary: var(--border-color);
-  --border-primary: #4a453f;
-  --border-hover: #5a544d;
+  --border-primary: #2d333b;
+  --border-hover: #465163;
 
-  --primary-color: #8b8680;
-  --primary-hover: #9a948e;
-  --primary-active: #a6a099;
+  --primary-color: #d97757;
+  --primary-hover: #e58c70;
+  --primary-active: #f0a48b;
   --primary-contrast: #ffffff;
 
   --success-color: #10b981;

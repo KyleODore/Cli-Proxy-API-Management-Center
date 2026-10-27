@@ -1,0 +1,12 @@
+import { copyFileSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+copyFileSync('dist/index.html', 'dist/management.html');
+let installer = readFileSync('upgrade.sh', 'utf8');
+const repository = process.env.GITHUB_REPOSITORY ?? '';
+if (repository && !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw new Error('Invalid release repository');
+if (repository) installer = installer.replace(/^DEFAULT_REPOSITORY='[^']*'$/m, `DEFAULT_REPOSITORY='${repository}'`);
+writeFileSync('dist/upgrade.sh', installer);
+chmodSync('dist/upgrade.sh', 0o755);
+const hash = createHash('sha256').update(readFileSync('dist/management.html')).digest('hex');
+writeFileSync('dist/SHA256SUMS', `${hash}  management.html\n`);
+console.log('Packaged dist/management.html, upgrade.sh and SHA256SUMS');

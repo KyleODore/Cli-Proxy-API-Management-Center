@@ -1,3 +1,5 @@
+> **prox Quota Management:** This fork adds pooled quotas, reset projections and a shared obsidian theme. See [README-prox.md](README-prox.md) for installation, development and model assumptions. Backend: [mikedoesgithub/CLIProxyAPI](https://github.com/mikedoesgithub/CLIProxyAPI). Upstream documentation follows.
+
 <div align="center">
 
 <img src="./logo.jpg" alt="CLI Proxy API" width="144">

@@ -59,7 +59,11 @@ export function useQuotaBatchLoader() {
               setQuota((prev) => {
                 const nextState = { ...prev };
                 entries.forEach(({ file }) => {
-                  nextState[getQuotaCacheKey(file)] = adapter.buildLoadingState();
+                  const key = getQuotaCacheKey(file);
+                  nextState[key] = {
+                    ...(prev[key] ?? adapter.buildLoadingState()),
+                    status: 'loading',
+                  };
                 });
                 return nextState;
               });

@@ -29,6 +29,7 @@ const quotaClasses = bindQuotaClasses(bodyStyles, 'QuotaBody.module.scss');
 
 export type QuotaCardProps = {
   entry: QuotaFileEntry;
+  showEmails?: boolean;
   quota?: QuotaCardState;
   resolvedTheme: ResolvedTheme;
   canRefresh: boolean;
@@ -55,7 +56,9 @@ export function QuotaCard(props: QuotaCardProps) {
   const file = entry.file;
   const retainedClaudeUsage =
     entry.type === 'claude' && hasClaudeUsageData(quota as ClaudeQuotaState | undefined);
-  const displayName = getQuotaDisplayName(file);
+  const displayName = props.showEmails
+    ? getQuotaDisplayName(file)
+    : file.name.replace(/[^@\s]+@[^@\s]+/g, '••••');
 
   // Capture the entrance delay only at mount, without a render-time ref read.
   const [mountEntranceDelayMs] = useState<number | null>(entranceDelayMs ?? null);
@@ -133,6 +136,9 @@ export function QuotaCard(props: QuotaCardProps) {
         </span>
         <span className={styles.fileName} title={displayName}>
           {displayName}
+          {props.showEmails && file.email && !displayName.includes(file.email)
+            ? ` · ${file.email}`
+            : ''}
         </span>
       </header>
 
