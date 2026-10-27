@@ -46,3 +46,7 @@ Both full forks were created under `mikedoesgithub`; GitHub reports admin/push a
 The public WebUI release is `v1.0.0-prox.1`: https://github.com/mikedoesgithub/Cli-Proxy-API-Management-Center/releases/tag/v1.0.0-prox.1 . GitHub's asset digest matches local SHA-256 `77ff7c4af1c80f93383314adb658fbcb96335812d9e341ab7dfb41ee1b81c22b`. The raw main installer was downloaded and run in a temporary installation, fetching the published asset over HTTPS. Asset checksum, HTML/config backups, config mode 0600, updater-disable setting and preservation of an auth fixture were verified. No real service or installed config was touched.
 
 The checked first release was uploaded with GitHub CLI. CI/release workflows are enabled; GitHub-hosted execution was not verified for this first release.
+
+## Upstream-sync workflow verification
+
+Both forks now contain a scheduled/manual upstream-sync workflow. Six local-Git fixture tests passed in each repository, Bash syntax passed and actionlint 1.7.7 accepted both workflow definitions. The frontend `bun run verify` again passed all 1,702 tests, lint and production build; the backend server build passed. Initial GitHub-hosted sync runs completed successfully and confirmed both forks already include upstream main. The post-merge validation jobs were skipped because no upstream change needed merging. Clean merge and conflict behavior were exercised against isolated local remotes; no synthetic test commits were pushed to production main.
