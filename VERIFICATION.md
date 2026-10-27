@@ -38,3 +38,11 @@ Preview PNGs are supplied separately in the outputs directory. They show **synth
 Real provider OAuth traffic, a real systemd service restart, native macOS execution, a production Tailscale/TLS endpoint were not tested. The installer was tested with controlled service/download fixtures and a real compiled HTML asset. The script's no-systemd path uses portable Bash/macOS utilities, but it has not been run on a native Mac.
 
 The projection's calendar/session assumptions and normalized-point limitations are explained in the UI and README-prox.md. A screenshot cannot establish actual future session starts or backend routing decisions. The source includes a release workflow that packages all required assets automatically. Fork/release publication is documented in README-prox.md.
+
+## Published fork verification
+
+Both full forks were created under `mikedoesgithub`; GitHub reports admin/push access. Local repositories are no longer shallow, retain all upstream branches/tags, use `origin` for the owned fork and `upstream` for router-for-me, and track `origin/main`. The backend fork changes only management-panel defaults, contribution policies and fork documentation. Its updater/config tests and server build passed.
+
+The public WebUI release is `v1.0.0-prox.1`: https://github.com/mikedoesgithub/Cli-Proxy-API-Management-Center/releases/tag/v1.0.0-prox.1 . GitHub's asset digest matches local SHA-256 `77ff7c4af1c80f93383314adb658fbcb96335812d9e341ab7dfb41ee1b81c22b`. The raw main installer was downloaded and run in a temporary installation, fetching the published asset over HTTPS. Asset checksum, HTML/config backups, config mode 0600, updater-disable setting and preservation of an auth fixture were verified. No real service or installed config was touched.
+
+The checked first release was uploaded with GitHub CLI. CI/release workflows are enabled; GitHub-hosted execution was not verified for this first release.
