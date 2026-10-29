@@ -142,34 +142,34 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   background: var(--bg-secondary);
-}
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  text-align: left;
-  white-space: nowrap;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    white-space: nowrap;
 
-  th,
-  td {
-    padding: 11px 12px;
-    border-bottom: 1px solid var(--border-color);
-  }
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-  th {
-    color: var(--text-tertiary);
-    font-size: 10px;
-    text-transform: uppercase;
-  }
+    th {
+      color: var(--text-tertiary);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
 
-  td {
-    color: var(--text-secondary);
-  }
+    td {
+      color: var(--text-secondary);
+    }
 
-  tbody tr:last-child td {
-    border-bottom: 0;
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
   }
 }
 

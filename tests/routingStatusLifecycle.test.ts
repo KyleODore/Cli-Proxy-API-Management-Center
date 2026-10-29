@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability -- Direct dispatcher harness for production-hook lifecycle tests. */
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import React from 'react';
-import { useRoutingStatus } from '@/features/routing/useRoutingStatus';
+import { getSoonestResetCapability, useRoutingStatus } from '@/features/routing/useRoutingStatus';
 import { apiClient } from '@/services/api/client';
 import { routingApi } from '@/services/api/routing';
 import type { RoutingStatus } from '@/services/api/routing';
@@ -165,5 +165,19 @@ describe('routing status save lifecycle', () => {
     expect(writesDuringPending).toBe(1);
     expect(getStatus).toHaveBeenCalledTimes(2);
     expect(states[2].current).toBe(false);
+  });
+
+  test('shares successful status capability only for the confirmed connection', async () => {
+    const first = { apiBase: 'https://first.invalid', managementKey: 'fixture' };
+    apiClient.setConfig(first);
+    const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValue({} as RoutingStatus);
+    spies.push(getStatus);
+    const { routing } = useProductionHookHarness();
+
+    expect(getSoonestResetCapability()).toBe(false);
+    await routing.refresh();
+    expect(getSoonestResetCapability()).toBe(true);
+    apiClient.setConfig({ apiBase: 'https://second.invalid', managementKey: 'other-fixture' });
+    expect(getSoonestResetCapability()).toBe(false);
   });
 });

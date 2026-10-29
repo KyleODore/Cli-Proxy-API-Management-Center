@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { createElement, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { parse as parseYaml } from 'yaml';
 import { parseRoutingStrategy, useVisualConfig } from '../src/hooks/useVisualConfig';
+import { shouldOfferSoonestReset } from '../src/features/config/routingStrategy';
 import { searchConfigFields } from '../src/features/config/searchIndex';
 import { runVisualConfig } from './helpers/visualConfig';
 
@@ -59,12 +59,10 @@ describe('visual config weighted routing strategy', () => {
     });
   });
 
-  test('offers and finds soonest-reset in the visual editor', () => {
-    const section = readFileSync(
-      new URL('../src/features/config/components/sections/SectionNetwork.tsx', import.meta.url),
-      'utf8'
-    );
-    expect(section).toContain("value: 'soonest-reset'");
+  test('gates new soonest-reset selections on confirmed backend support', () => {
+    expect(shouldOfferSoonestReset('round-robin', false)).toBe(false);
+    expect(shouldOfferSoonestReset('round-robin', true)).toBe(true);
+    expect(shouldOfferSoonestReset('soonest-reset', false)).toBe(true);
     expect(
       searchConfigFields('soonest-reset', (key) => key).map((entry) => entry.fieldId)
     ).toContain('routingStrategy');

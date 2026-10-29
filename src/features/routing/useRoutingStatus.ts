@@ -1,8 +1,36 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { create } from 'zustand';
 import { apiClient, routingApi } from '@/services/api';
 import type { ConfigurableRoutingStrategy, RoutingStatus } from '@/services/api/routing';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useAuthStore } from '@/stores';
+
+interface RoutingCapabilityState {
+  confirmedRevision: number | null;
+}
+
+const useRoutingCapabilityStore = create<RoutingCapabilityState>()(() => ({
+  confirmedRevision: null,
+}));
+
+export function getSoonestResetCapability(): boolean {
+  const confirmedRevision = useRoutingCapabilityStore.getState().confirmedRevision;
+  return (
+    useAuthStore.getState().connectionStatus === 'connected' &&
+    confirmedRevision !== null &&
+    confirmedRevision === apiClient.getConnectionRevision()
+  );
+}
+
+export function useSoonestResetCapability(): boolean {
+  const connected = useAuthStore((state) => state.connectionStatus === 'connected');
+  const confirmedRevision = useRoutingCapabilityStore((state) => state.confirmedRevision);
+  return (
+    connected &&
+    confirmedRevision !== null &&
+    confirmedRevision === apiClient.getConnectionRevision()
+  );
+}
 
 interface RoutingSaveOperations {
   isCurrent: () => boolean;
@@ -57,6 +85,7 @@ export function useRoutingStatus() {
     try {
       const next = await routingApi.getStatus();
       if (!isCurrent()) return;
+      useRoutingCapabilityStore.setState({ confirmedRevision: revision });
       setStatus(next);
     } catch (cause: unknown) {
       if (!isCurrent()) return;

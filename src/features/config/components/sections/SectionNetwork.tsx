@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { useSoonestResetCapability } from '@/features/routing/useRoutingStatus';
+import { shouldOfferSoonestReset } from '@/features/config/routingStrategy';
 import type { VisualConfigValues } from '@/types/visualConfig';
 import { CONFIG_TAB_ICONS, SECTION_INDEX_LABELS } from '../../constants';
 import type { ConfigSectionProps } from '../../types';
@@ -21,6 +23,7 @@ export function SectionNetwork({
   onChange,
 }: ConfigSectionProps) {
   const { t } = useTranslation();
+  const supportsSoonestReset = useSoonestResetCapability();
 
   const routingStrategyOptions: Array<{ value: RoutingStrategy; label: string }> = [
     {
@@ -35,11 +38,13 @@ export function SectionNetwork({
       value: 'fill-first',
       label: t('config_management.visual.sections.network.strategy_fill_first'),
     },
-    {
+  ];
+  if (shouldOfferSoonestReset(values.routingStrategy, supportsSoonestReset)) {
+    routingStrategyOptions.push({
       value: 'soonest-reset',
       label: t('config_management.visual.sections.network.strategy_soonest_reset'),
-    },
-  ];
+    });
+  }
 
   const disableImageGenerationOptions: Array<{ value: DisableImageGeneration; label: string }> = [
     {
