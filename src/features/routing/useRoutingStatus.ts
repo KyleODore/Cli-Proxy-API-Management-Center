@@ -89,6 +89,13 @@ export function useRoutingStatus() {
       setStatus(next);
     } catch (cause: unknown) {
       if (!isCurrent()) return;
+      const responseStatus =
+        typeof cause === 'object' && cause !== null && 'status' in cause
+          ? (cause as { status?: unknown }).status
+          : undefined;
+      if (responseStatus === 404 || responseStatus === 501) {
+        useRoutingCapabilityStore.setState({ confirmedRevision: null });
+      }
       setStatus(null);
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {

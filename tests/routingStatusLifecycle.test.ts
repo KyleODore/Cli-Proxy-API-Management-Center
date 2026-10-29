@@ -170,14 +170,69 @@ describe('routing status save lifecycle', () => {
   test('shares successful status capability only for the confirmed connection', async () => {
     const first = { apiBase: 'https://first.invalid', managementKey: 'fixture' };
     apiClient.setConfig(first);
-    const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValue({} as RoutingStatus);
+    const getStatus = spyOn(routingApi, 'getStatus')
+      .mockRejectedValueOnce({ status: 404 })
+      .mockResolvedValue({} as RoutingStatus);
     spies.push(getStatus);
     const { routing } = useProductionHookHarness();
 
     expect(getSoonestResetCapability()).toBe(false);
     await routing.refresh();
+    expect(getSoonestResetCapability()).toBe(false);
+    await routing.refresh();
     expect(getSoonestResetCapability()).toBe(true);
     apiClient.setConfig({ apiBase: 'https://second.invalid', managementKey: 'other-fixture' });
     expect(getSoonestResetCapability()).toBe(false);
+  });
+
+  for (const statusCode of [404, 501]) {
+    test(`revokes confirmed capability after a current ${statusCode} response`, async () => {
+      apiClient.setConfig({ apiBase: 'https://first.invalid', managementKey: 'fixture' });
+      const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValueOnce({} as RoutingStatus);
+      spies.push(getStatus);
+      const { routing } = useProductionHookHarness();
+
+      await routing.refresh();
+      expect(getSoonestResetCapability()).toBe(true);
+      getStatus.mockRejectedValueOnce(
+        Object.assign(new Error('unsupported'), { status: statusCode })
+      );
+      await routing.refresh();
+
+      expect(getSoonestResetCapability()).toBe(false);
+    });
+  }
+
+  test('retains confirmed capability after a transient error while clearing status', async () => {
+    apiClient.setConfig({ apiBase: 'https://first.invalid', managementKey: 'fixture' });
+    const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValueOnce({} as RoutingStatus);
+    spies.push(getStatus);
+    const { routing, states } = useProductionHookHarness();
+
+    await routing.refresh();
+    getStatus.mockRejectedValueOnce(new Error('temporary failure'));
+    await routing.refresh();
+
+    expect(getSoonestResetCapability()).toBe(true);
+    expect(states[0].current).toBeNull();
+    expect(states[3].current).toBe('temporary failure');
+  });
+
+  test('does not revoke current capability for a stale unsupported response', async () => {
+    apiClient.setConfig({ apiBase: 'https://first.invalid', managementKey: 'fixture' });
+    const staleResponse = deferred<void>();
+    const getStatus = spyOn(routingApi, 'getStatus')
+      .mockImplementationOnce(() => staleResponse.promise)
+      .mockResolvedValueOnce({} as RoutingStatus);
+    spies.push(getStatus);
+    const { routing } = useProductionHookHarness();
+
+    const staleRefresh = routing.refresh();
+    await routing.refresh();
+    expect(getSoonestResetCapability()).toBe(true);
+    staleResponse.reject(Object.assign(new Error('stale unsupported'), { status: 404 }));
+    await staleRefresh;
+
+    expect(getSoonestResetCapability()).toBe(true);
   });
 });
