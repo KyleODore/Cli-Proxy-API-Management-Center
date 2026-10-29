@@ -4,6 +4,32 @@ import type { ConfigurableRoutingStrategy, RoutingStatus } from '@/services/api/
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useAuthStore } from '@/stores';
 
+interface RoutingSaveOperations {
+  isCurrent: () => boolean;
+  setSaving: (saving: boolean) => void;
+  setError: (error: string | null) => void;
+  refresh: () => Promise<void>;
+}
+
+export async function runRoutingStrategySave(
+  strategy: ConfigurableRoutingStrategy,
+  operations: RoutingSaveOperations
+): Promise<void> {
+  const { isCurrent, setSaving, setError, refresh } = operations;
+  setSaving(true);
+  setError(null);
+  try {
+    await routingApi.setStrategy(strategy);
+    if (!isCurrent()) return;
+    await refresh();
+  } catch (cause: unknown) {
+    if (!isCurrent()) return;
+    setError(cause instanceof Error ? cause.message : String(cause));
+  } finally {
+    if (isCurrent()) setSaving(false);
+  }
+}
+
 export function useRoutingStatus() {
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const [status, setStatus] = useState<RoutingStatus | null>(null);
@@ -11,9 +37,12 @@ export function useRoutingStatus() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestRef = useRef(0);
+  const saveRequestRef = useRef(0);
 
   const refresh = useCallback(async () => {
     const requestId = ++requestRef.current;
+    saveRequestRef.current += 1;
+    setSaving(false);
     const revision = apiClient.getConnectionRevision();
     const isCurrent = () =>
       requestId === requestRef.current && revision === apiClient.getConnectionRevision();
@@ -47,28 +76,29 @@ export function useRoutingStatus() {
     if (connectionStatus !== 'connected') {
       return () => {
         requestRef.current += 1;
+        saveRequestRef.current += 1;
       };
     }
 
     const timer = window.setInterval(() => void refresh(), 30_000);
     return () => {
       requestRef.current += 1;
+      saveRequestRef.current += 1;
       window.clearInterval(timer);
     };
   }, [connectionStatus, refresh]);
 
   const saveStrategy = useCallback(
-    async (strategy: ConfigurableRoutingStrategy) => {
-      setSaving(true);
-      setError(null);
-      try {
-        await routingApi.setStrategy(strategy);
-        await refresh();
-      } catch (cause: unknown) {
-        setError(cause instanceof Error ? cause.message : String(cause));
-      } finally {
-        setSaving(false);
-      }
+    (strategy: ConfigurableRoutingStrategy) => {
+      const requestId = ++saveRequestRef.current;
+      const revision = apiClient.getConnectionRevision();
+      return runRoutingStrategySave(strategy, {
+        isCurrent: () =>
+          requestId === saveRequestRef.current && revision === apiClient.getConnectionRevision(),
+        setSaving,
+        setError,
+        refresh,
+      });
     },
     [refresh]
   );

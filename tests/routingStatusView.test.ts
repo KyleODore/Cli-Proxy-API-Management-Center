@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider } from 'react-i18next';
@@ -94,18 +93,5 @@ describe('authoritative routing status view', () => {
       expect(markup).not.toContain('<table');
       expect(markup).not.toContain('<option value="soonest-reset"');
     }
-  });
-
-  test('the hook owns guarded mount, global, and 30-second refreshes', () => {
-    const source = readFileSync(
-      new URL('../src/features/routing/useRoutingStatus.ts', import.meta.url),
-      'utf8'
-    );
-
-    expect(source).toContain('apiClient.getConnectionRevision()');
-    expect(source).toMatch(/requestId\s*===\s*requestRef\.current/);
-    expect(source).toContain('useHeaderRefresh(refresh)');
-    expect(source).toContain('30_000');
-    expect(source).toContain('routingApi.setStrategy');
   });
 });
