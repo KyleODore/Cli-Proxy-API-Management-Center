@@ -116,10 +116,47 @@ const config = {
   management: { 'allow-remote': false, 'disable-auto-update-panel': true },
   observability: { logs: { 'logging-to-file': true, 'request-log': true } },
   access: { 'api-keys': [] },
-  routing: { strategy: 'round-robin' },
+  routing: { strategy: 'soonest-reset' },
   providers: {},
   credentials: {},
   oauth: {},
+};
+const routingStatus = {
+  strategy: 'soonest-reset',
+  generated_at: new Date(now).toISOString(),
+  session_affinity: { enabled: true, ttl: '1h0m0s' },
+  providers: {
+    claude: [
+      {
+        auth_index: '1',
+        rank: 1,
+        state: 'eligible',
+        reason: 'known',
+        priority: 20,
+        weekly_reset: new Date(now + 7 * 24 * HOUR).toISOString(),
+        observed_at: new Date(now).toISOString(),
+        probe_pending: false,
+      },
+      {
+        auth_index: '2',
+        rank: 2,
+        state: 'exhausted',
+        reason: 'known',
+        priority: 1,
+        weekly_reset: new Date(now + 2 * 24 * HOUR).toISOString(),
+        exhausted_until: new Date(now + 24 * HOUR).toISOString(),
+        probe_pending: false,
+      },
+      {
+        auth_index: '3',
+        rank: 3,
+        state: 'eligible',
+        reason: 'probe',
+        priority: 0,
+        probe_pending: true,
+      },
+    ],
+  },
 };
 const json = (data: unknown, status = 200) =>
   Response.json(data, { status, headers: { 'X-CPA-Version': '8.0.0-prox-demo' } });
@@ -134,6 +171,7 @@ const server = Bun.serve({
     if (request.headers.get('authorization') !== 'Bearer prox-demo')
       return json({ error: 'Use the local fixture key: prox-demo' }, 401);
     if (path === '/v8/management/config') return json(config);
+    if (path === '/v8/management/routing/status') return json(routingStatus);
     if (path === '/v8/management/config.yaml')
       return new Response(
         'server:\n  host: 127.0.0.1\n  port: 8318\nmanagement:\n  disable-auto-update-panel: true\n',
