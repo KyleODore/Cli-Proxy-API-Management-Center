@@ -101,7 +101,9 @@ Restore the `.bak` HTML and `.prox.bak` config, then restart the same service if
 
 ## Verification
 
-See `VERIFICATION.md` for commands, test totals, browser coverage and limitations. No production CLIProxyAPI instance was modified and no real provider credential was used during development.
+The 2026-10-28 Management Center Task 4 pass used Node 24.21.0 and pinned Bun 1.4.3 on Windows x64. All 40 focused tests passed. The full test run had 1,739 passes and the five known unrelated baseline failures enumerated in `VERIFICATION.md`; standalone lint and production build then passed. Source searches confirmed that only the cache collector consumes the usage queue through named `popUsageQueue`, and artifact inspection confirmed a self-contained HTML file with a matching SHA-256 checksum. Cache history remains browser-local with 17-day retention, 30-second detail for six hours and five-minute compaction thereafter.
+
+No browser/demo or live provider/backend integration was exercised in that pass, so those remain unverified. Earlier browser and release observations are historical and are not claims about this pass. See `VERIFICATION.md` for the exact commands, results and limitations. No production CLIProxyAPI instance was modified and no real provider credential was used during development.
 
 ## Automatic upstream sync
 
