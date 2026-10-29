@@ -104,6 +104,7 @@
     "oauth": "OAuth 登录",
     "quota_management": "配额管理",
     "routing": "路由状态",
+    "cache": "缓存监控",
     "plugins": "插件管理",
     "plugin_store": "插件商店",
     "config_management": "配置面板",
@@ -125,6 +126,7 @@
     "oauth": "OAuth 授权登录",
     "quota_management": "API Key 与限额",
     "routing": "凭据选择状态",
+    "cache": "浏览器本地缓存用量",
     "plugins": "插件启停与配置",
     "plugin_store": "发现并安装插件",
     "logs": "请求追踪与排查",
@@ -1579,6 +1581,30 @@
         "add": "添加"
       }
     }
+  },
+  "cache": {
+    "title": "缓存监控",
+    "description": "仅此页面打开时采集的脱敏缓存令牌用量。",
+    "range": "历史范围",
+    "range_24h": "24 小时",
+    "range_7d": "7 天",
+    "range_17d": "17 天",
+    "local_notice": "浏览器本地 · 17 天 · 单采集器",
+    "storage_failed": "存储不可用。正在内存中继续，重新加载后历史将丢失。",
+    "totals": "缓存令牌总量",
+    "read_tokens": "缓存读取令牌",
+    "write_tokens": "缓存写入令牌",
+    "history": "用量历史",
+    "history_chart": "带采集覆盖缺口的缓存令牌历史",
+    "no_coverage": "无采集器覆盖",
+    "gap_explanation": "已覆盖的空桶为零。缺口表示页面已关闭、连接已断开或采集器不可用。",
+    "by_credential_model": "按凭据和模型",
+    "credential": "凭据",
+    "provider": "提供商",
+    "model": "模型",
+    "unknown": "未知",
+    "empty": "此范围内尚未采集缓存用量。",
+    "partial": "部分数据"
   },
   "routing": {
     "title": "路由状态",

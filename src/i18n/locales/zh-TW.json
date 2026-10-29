@@ -104,6 +104,7 @@
     "oauth": "OAuth 登入",
     "quota_management": "配額管理",
     "routing": "路由狀態",
+    "cache": "快取監控",
     "plugins": "插件管理",
     "plugin_store": "插件商店",
     "config_management": "設定面板",
@@ -125,6 +126,7 @@
     "oauth": "OAuth 授權登入",
     "quota_management": "API Key 與限額",
     "routing": "憑證選擇狀態",
+    "cache": "瀏覽器本機快取用量",
     "plugins": "插件啟停與設定",
     "plugin_store": "探索並安裝插件",
     "logs": "請求追蹤與排查",
@@ -1607,6 +1609,30 @@
         "add": "新增"
       }
     }
+  },
+  "cache": {
+    "title": "快取監控",
+    "description": "僅此頁面開啟時採集的脫敏快取權杖用量。",
+    "range": "歷史範圍",
+    "range_24h": "24 小時",
+    "range_7d": "7 天",
+    "range_17d": "17 天",
+    "local_notice": "瀏覽器本機 · 17 天 · 單採集器",
+    "storage_failed": "儲存不可用。正在記憶體中繼續，重新載入後歷史將遺失。",
+    "totals": "快取權杖總量",
+    "read_tokens": "快取讀取權杖",
+    "write_tokens": "快取寫入權杖",
+    "history": "用量歷史",
+    "history_chart": "帶採集覆蓋缺口的快取權杖歷史",
+    "no_coverage": "無採集器覆蓋",
+    "gap_explanation": "已覆蓋的空桶為零。缺口表示頁面已關閉、連線已中斷或採集器不可用。",
+    "by_credential_model": "按憑證和模型",
+    "credential": "憑證",
+    "provider": "供應商",
+    "model": "模型",
+    "unknown": "未知",
+    "empty": "此範圍內尚未採集快取用量。",
+    "partial": "部分資料"
   },
   "routing": {
     "title": "路由狀態",

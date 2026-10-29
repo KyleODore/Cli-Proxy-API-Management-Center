@@ -19,6 +19,7 @@ import { MainRoutes } from '@/router/MainRoutes';
 import { authFilesApi, pluginsApi } from '@/services/api';
 import {
   IconSidebarAuthFiles,
+  IconSidebarCache,
   IconSidebarConfig,
   IconSidebarDashboard,
   IconSidebarLogs,
@@ -62,6 +63,7 @@ const sidebarIcons: Record<string, ReactNode> = {
   oauth: <IconSidebarOauth size={18} />,
   quota: <IconSidebarQuota size={18} />,
   routing: <IconSidebarRouting size={18} />,
+  cache: <IconSidebarCache size={18} />,
   plugins: <IconSidebarPlugins size={18} />,
   pluginStore: <IconSidebarStore size={18} />,
   config: <IconSidebarConfig size={18} />,
@@ -653,6 +655,12 @@ export function MainLayout() {
           labelKey: 'nav.routing',
           metaKey: 'nav_meta.routing',
           icon: sidebarIcons.routing,
+        },
+        {
+          path: '/cache',
+          labelKey: 'nav.cache',
+          metaKey: 'nav_meta.cache',
+          icon: sidebarIcons.cache,
         },
         {
           path: '/logs',

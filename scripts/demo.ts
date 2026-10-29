@@ -158,6 +158,24 @@ const routingStatus = {
     ],
   },
 };
+let cacheQueueFixture: unknown[] | null = [
+  {
+    timestamp: new Date(now - 30_000).toISOString(),
+    auth_index: '1',
+    provider: 'claude',
+    model: 'claude-sonnet-demo',
+    tokens: { cache_read_tokens: 1200, cache_creation_tokens: 300 },
+    token_breakdown: { input: { cache_read_tokens: 9999, cache_write_tokens: 9999 } },
+  },
+  {
+    timestamp: new Date(now - 20_000).toISOString(),
+    auth_index: '2',
+    provider: 'codex',
+    model: 'gpt-demo',
+    tokens: {},
+    token_breakdown: { input: { cache_read_tokens: 450, cache_write_tokens: 75 } },
+  },
+];
 const json = (data: unknown, status = 200) =>
   Response.json(data, { status, headers: { 'X-CPA-Version': '8.0.0-prox-demo' } });
 const server = Bun.serve({
@@ -172,6 +190,11 @@ const server = Bun.serve({
       return json({ error: 'Use the local fixture key: prox-demo' }, 401);
     if (path === '/v8/management/config') return json(config);
     if (path === '/v8/management/routing/status') return json(routingStatus);
+    if (path === '/v8/management/observability/usage/queue') {
+      const fixture = cacheQueueFixture ?? [];
+      cacheQueueFixture = null;
+      return json(fixture);
+    }
     if (path === '/v8/management/config.yaml')
       return new Response(
         'server:\n  host: 127.0.0.1\n  port: 8318\nmanagement:\n  disable-auto-update-panel: true\n',

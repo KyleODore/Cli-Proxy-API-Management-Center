@@ -104,6 +104,7 @@
     "oauth": "OAuth Login",
     "quota_management": "Quota Management",
     "routing": "Routing Status",
+    "cache": "Cache Monitor",
     "plugins": "Plugins",
     "plugin_store": "Plugin Store",
     "config_management": "Config Panel",
@@ -125,6 +126,7 @@
     "oauth": "OAuth authorization",
     "quota_management": "API keys & limits",
     "routing": "Credential selection state",
+    "cache": "Browser-local cache usage",
     "plugins": "Plugin toggles & config",
     "plugin_store": "Discover & install plugins",
     "logs": "Request tracing",
@@ -1581,6 +1583,30 @@
         "add": "Add"
       }
     }
+  },
+  "cache": {
+    "title": "Cache Monitor",
+    "description": "Sanitized cache token usage collected only while this page is open.",
+    "range": "History range",
+    "range_24h": "24 hours",
+    "range_7d": "7 days",
+    "range_17d": "17 days",
+    "local_notice": "Browser-local · 17 days · one collector",
+    "storage_failed": "Storage unavailable. Continuing in memory; history will not survive a reload.",
+    "totals": "Cache token totals",
+    "read_tokens": "Cache read tokens",
+    "write_tokens": "Cache write tokens",
+    "history": "Usage history",
+    "history_chart": "Cache token history with collector coverage gaps",
+    "no_coverage": "No collector coverage",
+    "gap_explanation": "Empty covered buckets are zero. Gaps mean the page was closed, disconnected, or the collector was unavailable.",
+    "by_credential_model": "By credential and model",
+    "credential": "Credential",
+    "provider": "Provider",
+    "model": "Model",
+    "unknown": "Unknown",
+    "empty": "No cache usage collected in this range.",
+    "partial": "Partial"
   },
   "routing": {
     "title": "Routing Status",

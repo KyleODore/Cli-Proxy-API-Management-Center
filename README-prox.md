@@ -87,6 +87,12 @@ There is an unavoidable forecasting assumption: **the next five-hour rolling res
 
 History is sampled on successful observations every 30 seconds while the Quota page is open. It is scoped to server and management principal using a SHA-256-derived storage key. Recent six-hour data keeps 30-second resolution; older data is compacted to five-minute buckets and retained for 17 days. No management key, credential filename or raw credential payload is stored in history. Membership signatures are SHA-256 hashes; compact tuple encoding stores each distinct signature only once. The existing remember-password preference still controls management-key persistence. Storage failure falls back to in-memory history with a visible notice.
 
+## Browser-local cache monitor
+
+The Observe → Cache Monitor page consumes `GET /v8/management/observability/usage/queue` with `count=100` every five seconds, only while that page is mounted and connected. This endpoint destructively pops backend records; the cache page is the only frontend consumer, permits one in-flight request, and aborts on unmount, logout, or connection change. Other pages do not share its queue data.
+
+The adapter retains only timestamp, auth index, provider, model, and cache read/write totals. Legacy `tokens.cache_*` values take precedence over canonical `token_breakdown.input`; zero and missing values remain distinct. Aggregates and successful-poll heartbeats are browser-local under a SHA-256 connection/principal scope, retained for 17 days, kept at 30-second resolution for six hours and compacted to five minutes thereafter. Empty covered buckets display zero, while page-closed and disconnected intervals remain gaps. Storage failure continues in memory with a visible warning. The local demo returns a one-shot synthetic queue fixture before its generic usage handler.
+
 Burn uses the selected 1h/3h/6h history. Endpoint loss divided by elapsed hours is used for contiguous reset-free data. Reset-crossing segments, changed account membership and gaps longer than ten minutes are excluded from the fallback segment estimate. An unmeasured pool displays `Collecting history`, rather than treating a missing rate as a verified zero. Changing Future usage affects projections, not measured historical burn.
 
 ## Roll back
