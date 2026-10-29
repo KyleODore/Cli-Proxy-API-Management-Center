@@ -1,13 +1,43 @@
+/* eslint-disable react-hooks/immutability -- Direct dispatcher harness for production-hook lifecycle tests. */
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
-import { runRoutingStrategySave } from '@/features/routing/useRoutingStatus';
+import React from 'react';
+import { useRoutingStatus } from '@/features/routing/useRoutingStatus';
 import { apiClient } from '@/services/api/client';
 import { routingApi } from '@/services/api/routing';
+import type { RoutingStatus } from '@/services/api/routing';
+import { useAuthStore } from '@/stores';
 
+interface StateSlot {
+  current: unknown;
+  updates: unknown[];
+}
+
+interface HookDispatcher {
+  useCallback: (callback: unknown) => unknown;
+  useDebugValue: () => void;
+  useEffect: () => void;
+  useLayoutEffect: () => void;
+  useMemo: (factory: () => unknown) => unknown;
+  useRef: (current: unknown) => { current: unknown };
+  useState: (initial: unknown) => [unknown, (next: unknown) => void];
+  useSyncExternalStore: (
+    subscribe: (callback: () => void) => () => void,
+    getSnapshot: () => unknown
+  ) => unknown;
+}
+
+const reactInternals = (
+  React as unknown as {
+    __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE: { H: unknown };
+  }
+).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+const initialConnectionStatus = useAuthStore.getState().connectionStatus;
 const spies: Array<{ mockRestore(): void }> = [];
 
 afterEach(() => {
   spies.splice(0).forEach((spy) => spy.mockRestore());
   apiClient.setConfig({ apiBase: '', managementKey: '' });
+  useAuthStore.getState().connectionStatus = initialConnectionStatus;
 });
 
 function deferred<T>() {
@@ -20,22 +50,41 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-function saveHarness() {
-  const events: string[] = [];
-  let operation = 0;
-  const start = () => {
-    const requestId = ++operation;
-    const revision = apiClient.getConnectionRevision();
-    return runRoutingStrategySave('soonest-reset', {
-      isCurrent: () => requestId === operation && revision === apiClient.getConnectionRevision(),
-      setSaving: (saving) => events.push(`saving:${saving}`),
-      setError: (error) => events.push(`error:${error}`),
-      refresh: async () => {
-        events.push('refresh');
-      },
-    });
+function useProductionHookHarness() {
+  const states: StateSlot[] = [];
+  const previousDispatcher = reactInternals.H;
+  const dispatcher: HookDispatcher = {
+    useCallback: (callback) => callback,
+    useDebugValue: () => {},
+    useEffect: () => {},
+    useLayoutEffect: () => {},
+    useMemo: (factory) => factory(),
+    useRef: (current) => ({ current }),
+    useState: (initial) => {
+      const slot: StateSlot = { current: initial, updates: [] };
+      states.push(slot);
+      return [
+        initial,
+        (next) => {
+          const value =
+            typeof next === 'function'
+              ? (next as (previous: unknown) => unknown)(slot.current)
+              : next;
+          slot.current = value;
+          slot.updates.push(value);
+        },
+      ];
+    },
+    useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
   };
-  return { events, start };
+
+  useAuthStore.getState().connectionStatus = 'connected';
+  reactInternals.H = dispatcher;
+  try {
+    return { routing: useRoutingStatus(), states };
+  } finally {
+    reactInternals.H = previousDispatcher;
+  }
 }
 
 describe('routing status save lifecycle', () => {
@@ -44,29 +93,33 @@ describe('routing status save lifecycle', () => {
     apiClient.setConfig(first);
     const write = deferred<void>();
     spies.push(spyOn(routingApi, 'setStrategy').mockReturnValue(write.promise));
-    const harness = saveHarness();
+    const { routing, states } = useProductionHookHarness();
 
-    const pending = harness.start();
+    const pending = routing.setStrategy('soonest-reset');
     apiClient.setConfig({ apiBase: 'https://second.invalid', managementKey: 'other-fixture' });
     apiClient.setConfig(first);
     write.reject(new DOMException('The management connection changed.', 'AbortError'));
     await pending;
 
-    expect(harness.events).toEqual(['saving:true', 'error:null']);
+    expect(states[3].updates).toEqual([null]);
+    expect(states[2].updates).toEqual([true]);
   });
 
   test('does not refresh or finish saving after a stale success', async () => {
     apiClient.setConfig({ apiBase: 'https://first.invalid', managementKey: 'fixture' });
     const write = deferred<void>();
-    spies.push(spyOn(routingApi, 'setStrategy').mockReturnValue(write.promise));
-    const harness = saveHarness();
+    const getStatus = spyOn(routingApi, 'getStatus');
+    spies.push(spyOn(routingApi, 'setStrategy').mockReturnValue(write.promise), getStatus);
+    const { routing, states } = useProductionHookHarness();
 
-    const pending = harness.start();
+    const pending = routing.setStrategy('soonest-reset');
     apiClient.setConfig({ apiBase: 'https://second.invalid', managementKey: 'other-fixture' });
     write.resolve();
     await pending;
 
-    expect(harness.events).toEqual(['saving:true', 'error:null']);
+    expect(getStatus).not.toHaveBeenCalled();
+    expect(states[2].updates).toEqual([true]);
+    expect(states[3].updates).toEqual([null]);
   });
 
   test('keeps only the newest save completion and refreshes after its write', async () => {
@@ -75,24 +128,42 @@ describe('routing status save lifecycle', () => {
     const write = spyOn(routingApi, 'setStrategy')
       .mockImplementationOnce(() => firstWrite.promise)
       .mockImplementationOnce(() => secondWrite.promise);
-    spies.push(write);
-    const harness = saveHarness();
+    const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValue({} as RoutingStatus);
+    spies.push(write, getStatus);
+    const { routing, states } = useProductionHookHarness();
 
-    const firstPending = harness.start();
-    const secondPending = harness.start();
+    const firstPending = routing.setStrategy('soonest-reset');
+    const secondPending = routing.setStrategy('fill-first');
     secondWrite.resolve();
     await secondPending;
     firstWrite.reject(new Error('stale save failure'));
     await firstPending;
 
     expect(write).toHaveBeenCalledTimes(2);
-    expect(harness.events).toEqual([
-      'saving:true',
-      'error:null',
-      'saving:true',
-      'error:null',
-      'refresh',
-      'saving:false',
-    ]);
+    expect(getStatus).toHaveBeenCalledTimes(1);
+    expect(states[2].updates).toEqual([true, true, false]);
+    expect(states[3].updates).toEqual([null, null, null]);
+  });
+
+  test('keeps a pending save authoritative across a same-connection refresh', async () => {
+    apiClient.setConfig({ apiBase: 'https://first.invalid', managementKey: 'fixture' });
+    const write = deferred<void>();
+    const setStrategy = spyOn(routingApi, 'setStrategy').mockReturnValue(write.promise);
+    const getStatus = spyOn(routingApi, 'getStatus').mockResolvedValue({} as RoutingStatus);
+    spies.push(setStrategy, getStatus);
+    const { routing, states } = useProductionHookHarness();
+
+    const pendingSave = routing.setStrategy('soonest-reset');
+    await routing.refresh();
+    const savingDuringWrite = states[2].current;
+    const earlySave = states[2].current ? null : routing.setStrategy('fill-first');
+    const writesDuringPending = setStrategy.mock.calls.length;
+    write.resolve();
+    await Promise.all([pendingSave, earlySave].filter(Boolean));
+
+    expect(savingDuringWrite).toBe(true);
+    expect(writesDuringPending).toBe(1);
+    expect(getStatus).toHaveBeenCalledTimes(2);
+    expect(states[2].current).toBe(false);
   });
 });

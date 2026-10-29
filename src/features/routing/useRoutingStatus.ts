@@ -41,8 +41,6 @@ export function useRoutingStatus() {
 
   const refresh = useCallback(async () => {
     const requestId = ++requestRef.current;
-    saveRequestRef.current += 1;
-    setSaving(false);
     const revision = apiClient.getConnectionRevision();
     const isCurrent = () =>
       requestId === requestRef.current && revision === apiClient.getConnectionRevision();
@@ -77,6 +75,7 @@ export function useRoutingStatus() {
       return () => {
         requestRef.current += 1;
         saveRequestRef.current += 1;
+        setSaving(false);
       };
     }
 
@@ -84,6 +83,7 @@ export function useRoutingStatus() {
     return () => {
       requestRef.current += 1;
       saveRequestRef.current += 1;
+      setSaving(false);
       window.clearInterval(timer);
     };
   }, [connectionStatus, refresh]);
