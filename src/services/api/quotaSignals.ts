@@ -9,7 +9,12 @@ export function readPassiveQuotaWindows(quota: unknown, provider: string): Passi
   if (!quota || typeof quota !== 'object' || !('signals' in quota)) return [];
   const signals = quota.signals;
   if (!signals || typeof signals !== 'object') return [];
-  const fields = signals as Record<string, unknown>;
+  const fields = Object.fromEntries(
+    Object.entries(signals as Record<string, unknown>).map(([key, value]) => [
+      key.toLowerCase(),
+      value,
+    ])
+  );
   const num = (key: string): number | null => {
     const value = fields[key];
     if (typeof value !== 'number' && (typeof value !== 'string' || !value.trim())) return null;

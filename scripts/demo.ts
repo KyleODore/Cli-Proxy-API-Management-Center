@@ -17,16 +17,16 @@ const entries: QuotaFileEntry[] = Array.from({ length: 9 }, (_, i) => {
   const reset = now + (claude ? [24, 36, 52, 62, 70, 82][j] : 166) * HOUR;
   const signals = claude
     ? {
-        'anthropic-ratelimit-unified-5h-utilization': String(1 - remaining / capacity),
-        'anthropic-ratelimit-unified-5h-reset': String((now + (j + 1) * HOUR) / 1000),
-        'anthropic-ratelimit-unified-7d-utilization': String((1 - remaining / capacity) / 2),
-        'anthropic-ratelimit-unified-7d-reset': String(reset / 1000),
+        'Anthropic-Ratelimit-Unified-5h-Utilization': String(1 - remaining / capacity),
+        'Anthropic-Ratelimit-Unified-5h-Reset': String((now + (j + 1) * HOUR) / 1000),
+        'Anthropic-Ratelimit-Unified-7d-Utilization': String((1 - remaining / capacity) / 2),
+        'Anthropic-Ratelimit-Unified-7d-Reset': String(reset / 1000),
       }
     : {
-        'x-codex-primary-used-percent': String(100 * (1 - remaining / capacity)),
-        'x-codex-primary-reset-at': String((now + 4 * HOUR) / 1000),
-        'x-codex-secondary-used-percent': String(50 * (1 - remaining / capacity)),
-        'x-codex-secondary-reset-at': String(reset / 1000),
+        'X-Codex-Primary-Used-Percent': String(100 * (1 - remaining / capacity)),
+        'X-Codex-Primary-Reset-At': String((now + 4 * HOUR) / 1000),
+        'X-Codex-Secondary-Used-Percent': String(50 * (1 - remaining / capacity)),
+        'X-Codex-Secondary-Reset-At': String(reset / 1000),
       };
   return {
     type: claude ? 'claude' : 'codex',
