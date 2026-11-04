@@ -17,16 +17,16 @@ const entries: QuotaFileEntry[] = Array.from({ length: 9 }, (_, i) => {
   const reset = now + (claude ? [24, 36, 52, 62, 70, 82][j] : 166) * HOUR;
   const signals = claude
     ? {
-        'anthropic-ratelimit-unified-5h-utilization': String(1 - remaining / capacity),
-        'anthropic-ratelimit-unified-5h-reset': String((now + (j + 1) * HOUR) / 1000),
-        'anthropic-ratelimit-unified-7d-utilization': String((1 - remaining / capacity) / 2),
-        'anthropic-ratelimit-unified-7d-reset': String(reset / 1000),
+        'Anthropic-Ratelimit-Unified-5h-Utilization': String(1 - remaining / capacity),
+        'Anthropic-Ratelimit-Unified-5h-Reset': String((now + (j + 1) * HOUR) / 1000),
+        'Anthropic-Ratelimit-Unified-7d-Utilization': String((1 - remaining / capacity) / 2),
+        'Anthropic-Ratelimit-Unified-7d-Reset': String(reset / 1000),
       }
     : {
-        'x-codex-primary-used-percent': String(100 * (1 - remaining / capacity)),
-        'x-codex-primary-reset-at': String((now + 4 * HOUR) / 1000),
-        'x-codex-secondary-used-percent': String(50 * (1 - remaining / capacity)),
-        'x-codex-secondary-reset-at': String(reset / 1000),
+        'X-Codex-Primary-Used-Percent': String(100 * (1 - remaining / capacity)),
+        'X-Codex-Primary-Reset-At': String((now + 4 * HOUR) / 1000),
+        'X-Codex-Secondary-Used-Percent': String(50 * (1 - remaining / capacity)),
+        'X-Codex-Secondary-Reset-At': String(reset / 1000),
       };
   return {
     type: claude ? 'claude' : 'codex',
@@ -116,11 +116,66 @@ const config = {
   management: { 'allow-remote': false, 'disable-auto-update-panel': true },
   observability: { logs: { 'logging-to-file': true, 'request-log': true } },
   access: { 'api-keys': [] },
-  routing: { strategy: 'round-robin' },
+  routing: { strategy: 'soonest-reset' },
   providers: {},
   credentials: {},
   oauth: {},
 };
+const routingStatus = {
+  strategy: 'soonest-reset',
+  generated_at: new Date(now).toISOString(),
+  session_affinity: { enabled: true, ttl: '1h0m0s' },
+  providers: {
+    claude: [
+      {
+        auth_index: '1',
+        rank: 1,
+        state: 'eligible',
+        reason: 'known',
+        priority: 20,
+        weekly_reset: new Date(now + 7 * 24 * HOUR).toISOString(),
+        observed_at: new Date(now).toISOString(),
+        probe_pending: false,
+      },
+      {
+        auth_index: '2',
+        rank: 2,
+        state: 'exhausted',
+        reason: 'known',
+        priority: 1,
+        weekly_reset: new Date(now + 2 * 24 * HOUR).toISOString(),
+        exhausted_until: new Date(now + 24 * HOUR).toISOString(),
+        probe_pending: false,
+      },
+      {
+        auth_index: '3',
+        rank: 3,
+        state: 'eligible',
+        reason: 'probe',
+        priority: 0,
+        probe_pending: true,
+      },
+    ],
+  },
+};
+let cacheQueueFixture: unknown[] | null = [
+  {
+    timestamp: new Date(now - 30_000).toISOString(),
+    auth_index: '1',
+    provider: 'claude',
+    model: 'claude-sonnet-demo',
+    tokens: { cache_read_tokens: 1200, cache_creation_tokens: 300 },
+    token_breakdown: { input: { cache_read_tokens: 9999, cache_write_tokens: 9999 } },
+  },
+  {
+    timestamp: new Date(now - 20_000).toISOString(),
+    auth_index: '2',
+    provider: 'codex',
+    model: 'gpt-demo',
+    tokens: {},
+    token_breakdown: { input: { cache_read_tokens: 450, cache_write_tokens: 75 } },
+  },
+];
 const json = (data: unknown, status = 200) =>
   Response.json(data, { status, headers: { 'X-CPA-Version': '8.0.0-prox-demo' } });
 const server = Bun.serve({
@@ -134,6 +189,12 @@ const server = Bun.serve({
     if (request.headers.get('authorization') !== 'Bearer prox-demo')
       return json({ error: 'Use the local fixture key: prox-demo' }, 401);
     if (path === '/v8/management/config') return json(config);
+    if (path === '/v8/management/routing/status') return json(routingStatus);
+    if (path === '/v8/management/observability/usage/queue') {
+      const fixture = cacheQueueFixture ?? [];
+      cacheQueueFixture = null;
+      return json(fixture);
+    }
     if (path === '/v8/management/config.yaml')
       return new Response(
         'server:\n  host: 127.0.0.1\n  port: 8318\nmanagement:\n  disable-auto-update-panel: true\n',

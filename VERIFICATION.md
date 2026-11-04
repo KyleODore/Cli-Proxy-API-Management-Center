@@ -1,5 +1,30 @@
 # Verification — prox integration
 
+## Management Center track — Task 4 (Windows, 2026-10-28)
+
+Runtime observed on Windows x64: Node **24.21.0** and Bun **1.4.3**, invoked with `npx --yes bun@1.4.3`. No dependency or lockfile changes were made.
+
+### Commands and observed results
+
+- Focused verification used `npx --yes bun@1.4.3 test tests/quotaSignals.test.ts tests/routingApi.test.ts tests/routingStatusView.test.ts tests/visualConfigRoutingStrategy.test.ts tests/cacheUsageQueue.test.ts tests/cacheCollector.test.ts tests/cacheHistory.test.ts tests/cacheModel.test.ts tests/cachePage.test.ts`: **40 passed, 0 failed**, 136 assertions across nine files.
+- Full `npx --yes bun@1.4.3 run verify` stopped at the test phase with **1,739 passed and five failed** (1,744 tests across 179 files; 19,611 assertions). The five known unrelated baseline failures were:
+  - `logs controller lifecycle wiring > invalidates synchronously on connection identity/config changes and unmount` — a source-contract `toContain` assertion did not match.
+  - `provider probe proxy forwarding > base and sponsor forms pass their editable proxy to probe hooks` — a source-contract `toContain` assertion did not match.
+  - `prox upgrade transactional installer > uses exact MANAGEMENT_STATIC_PATH file overrides` — `ENOENT` reading the expected override HTML.
+  - `prox upgrade transactional installer > uses MANAGEMENT_STATIC_PATH directory overrides` — `ENOENT` reading the expected override HTML.
+  - `prox upgrade transactional installer > uses WRITABLE_PATH as the backend does` — `ENOENT` reading the expected override HTML.
+- Because `verify` chains commands with `&&`, that failing command did not run lint or build. Running them separately with the pinned runtime succeeded: `npx --yes bun@1.4.3 --bun run lint` exited zero without warnings/errors, and `npx --yes bun@1.4.3 --bun run build` completed TypeScript, Vite and packaging. The build printed two `The system cannot find the path specified.` messages before Vite output; their origin was not diagnosed, but the command exited zero and generated the package.
+- `git diff --check` passed after the documentation updates.
+- Source searches found the endpoint literal `/observability/usage/queue` only in `src/services/api/usageQueue.ts`. The brief's `usageQueueApi.pop` search returned no matches because the implementation exports and imports named `popUsageQueue`; its only production consumer is `src/features/cache/useCacheCollector.ts`. The collector polls every five seconds with `count=100`, shares one in-flight request, and aborts/suppresses stale work on stop or connection revision change. Focused collector and adapter tests passed.
+- Browser-local cache history retains 17 days, keeps 30-second buckets for six hours, and compacts older data to five-minute buckets. Its storage key is derived with SHA-256 from the connection and principal; focused history tests confirmed pruning, compaction, scoped persistence and sanitized round trips.
+- The production build produced a 3,379,982-byte `dist/management.html` with two inline script tags, no external script assets and no external stylesheet links. Its SHA-256 was `a4ac5cef401a1cc8165c997e5c10d9ca970fc473f88150a445cdfec8f17a1870`, exactly matching `dist/SHA256SUMS`. `dist/` is ignored and was not committed.
+
+### Explicitly unverified in this pass
+
+No browser or demo was run, no screenshots were captured, and no live CLIProxyAPI backend, real provider integration, real credential or live destructive queue consumption was exercised. Those behaviors remain unverified in this pass; static markup and source-contract tests do not establish browser interactions or live backend compatibility. The five baseline failures mean the complete verification command was not green even though the focused suites, standalone lint, build and artifact checks passed.
+
+## Earlier Linux verification
+
 Verified on Linux, 2026-10-27. The final production artifact is built from this source; no live CLIProxyAPI service or real credential was modified.
 
 ## Automated checks
